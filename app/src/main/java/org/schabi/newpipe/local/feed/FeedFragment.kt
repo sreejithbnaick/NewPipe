@@ -38,7 +38,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
-import androidx.core.math.MathUtils
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
@@ -606,7 +605,7 @@ class FeedFragment : BaseStateFragment<FeedState>() {
         // state until the user scrolls them out of the visible area which causes a update/bind-call
         groupAdapter.notifyItemRangeChanged(
             0,
-            MathUtils.clamp(highlightCount, lastNewItemsCount, groupAdapter.itemCount)
+            highlightCount.coerceIn(lastNewItemsCount, groupAdapter.itemCount)
         )
 
         if (highlightCount > 0) {
@@ -625,9 +624,13 @@ class FeedFragment : BaseStateFragment<FeedState>() {
                 execOnEnd = {
                     // Disabled animations would result in immediately hiding the button
                     // after it showed up
-                    if (DeviceUtils.hasAnimationsAnimatorDurationEnabled(context)) {
-                        // Hide the new items-"popup" after 10s
-                        hideNewItemsLoaded(true, 10000)
+                    // Context can be null in some cases, so we have to make sure it is not null in
+                    // order to avoid a NullPointerException
+                    context?.let {
+                        if (DeviceUtils.hasAnimationsAnimatorDurationEnabled(it)) {
+                            // Hide the new items button after 10s
+                            hideNewItemsLoaded(true, 10000)
+                        }
                     }
                 }
             )
